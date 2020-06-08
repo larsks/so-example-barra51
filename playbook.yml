@@ -1,0 +1,35 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: check master node
+      script:
+        cmd: bash/checkmaster.sh
+      register: master
+
+    - debug:
+        msg:
+          - "{{ master }}"
+          - "{{ master.stdout }}"
+          - "{{ inventory_hostname }}"
+
+    - set_fact:
+        is_master: "{{ master.stdout_lines[0] == inventory_hostname }}"
+
+    - debug:
+        var: is_master
+
+    - group_by:
+        key: "role_{{ 'master' if is_master else 'secondary' }}"
+
+- hosts: role_master
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: "tasks on master node"
+
+- hosts: role_secondary
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: "tasks on secondary nodes"
